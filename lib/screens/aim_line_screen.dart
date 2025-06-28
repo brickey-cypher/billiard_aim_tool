@@ -49,7 +49,7 @@ class _AimLineScreenState extends State<AimLineScreen> {
         child: Container(
           width: tableSize.width,
           height: tableSize.height,
-          color: Colors.green[700],
+          color: Colors.transparent,
           child: Stack(
             children: [
               CustomPaint(
