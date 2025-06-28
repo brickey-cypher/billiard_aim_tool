@@ -72,9 +72,6 @@ List<Offset> calculateMultiCushionPath({
     current = next;
   }
 
-  // Optionally connect final point to target
-  path.add(targetBall);
-
   return path;
 }
 
