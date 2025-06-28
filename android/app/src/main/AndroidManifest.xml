@@ -2,7 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.billiard_aim_tool"
-    tools:replace="package">
+    >
 
     <!-- ✅ Permissions should be declared *inside* the <manifest> tag, but *outside* the <application> tag -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -35,7 +35,7 @@
         <!-- Overlay service for flutter_overlay_window -->
         <service
             android:name="dev.fluttercommunity.plus.flutter_overlay_window.FlutterOverlayWindowService"
-            android:exported="false"
+            android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" />
 
         <!-- Flutter tool plugin config -->
