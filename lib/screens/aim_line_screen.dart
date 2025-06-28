@@ -1,9 +1,9 @@
+
 import 'package:flutter/material.dart';
 import '../logic/bank_shot_logic.dart';
+import '../logic/billiard_ball.dart';
 import '../painters/trajectory_painter.dart';
 import '../painters/table_painter.dart';
-import '../widgets/cue_ball.dart';
-import '../widgets/target_ball.dart';
 
 class AimLineScreen extends StatefulWidget {
   const AimLineScreen({super.key});
@@ -13,35 +13,46 @@ class AimLineScreen extends StatefulWidget {
 }
 
 class _AimLineScreenState extends State<AimLineScreen> {
-  Offset cueBallPosition = const Offset(150, 400);
-  Offset targetBallPosition = const Offset(150, 200);
   final Size tableSize = const Size(300, 500);
+
+  List<BilliardBall> balls = [];
 
   Rect get tableRect => Rect.fromLTWH(0, 0, tableSize.width, tableSize.height);
 
-  void updateCueBall(Offset newPosition) {
-    setState(() {
-      cueBallPosition = newPosition;
-    });
+  @override
+  void initState() {
+    super.initState();
+    balls = [
+      BilliardBall(
+        position: const Offset(150, 400),
+        radius: 14.0,
+        color: Colors.white,
+        isCue: true,
+      ),
+      BilliardBall(
+        position: const Offset(150, 200),
+        color: Colors.redAccent,
+      ),
+    ];
   }
 
-  void updateTargetBall(Offset newPosition) {
+  void updateBallPosition(int index, Offset newPosition) {
     setState(() {
-      targetBallPosition = newPosition;
+      balls[index].position = newPosition;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final cue = balls.firstWhere((b) => b.isCue);
+    final target = balls.firstWhere((b) => !b.isCue);
+
     final trajectoryPoints = calculateMultiCushionPath(
-      cueBall: cueBallPosition,
-      targetBall: targetBallPosition,
+      cueBall: cue.position,
+      targetBall: target.position,
       table: tableRect,
       maxBounces: 3,
     );
-
-    debugPrint('🧠 cueBall: $cueBallPosition | 🎯 targetBall: $targetBallPosition');
-    debugPrint('📐 trajectoryPoints: $trajectoryPoints');
 
     return Scaffold(
       appBar: AppBar(title: const Text('Aim Line Screen')),
@@ -60,20 +71,46 @@ class _AimLineScreenState extends State<AimLineScreen> {
                 painter: TrajectoryPainter(points: trajectoryPoints),
                 child: Container(),
               ),
-              CueBall(
-                position: cueBallPosition,
-                boundary: tableRect,
-                onPositionChanged: updateCueBall,
-              ),
-              TargetBall(
-                position: targetBallPosition,
-                boundary: tableRect,
-                onPositionChanged: updateTargetBall,
-              ),
+              for (int i = 0; i < balls.length; i++)
+                Positioned(
+                  left: balls[i].position.dx - balls[i].radius,
+                  top: balls[i].position.dy - balls[i].radius,
+                  child: GestureDetector(
+                    onPanUpdate: (details) {
+                      final newOffset = balls[i].position + details.delta;
+                      final clamped = _clampToBoundary(newOffset, balls[i].radius);
+                      updateBallPosition(i, clamped);
+                    },
+                    child: Container(
+                      width: balls[i].radius * 2,
+                      height: balls[i].radius * 2,
+                      decoration: BoxDecoration(
+                        color: balls[i].color,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.black, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(64),
+                            offset: const Offset(2, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Offset _clampToBoundary(Offset point, double radius) {
+    final minX = tableRect.left + radius;
+    final maxX = tableRect.right - radius;
+    final minY = tableRect.top + radius;
+    final maxY = tableRect.bottom - radius;
+    return Offset(point.dx.clamp(minX, maxX), point.dy.clamp(minY, maxY));
   }
 }
